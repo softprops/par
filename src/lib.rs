@@ -1,16 +1,17 @@
 extern crate termsize;
 
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::thread;
 
 pub struct Bar {
+    prefix: Option<String>,
     total: u64,
     current: AtomicUsize
 }
 
 impl Bar {
-    pub fn new(total: u64) -> Bar {
+    pub fn new(total: u64, prefix: Option<&str>) -> Bar {
         Bar {
+            prefix: prefix.clone().map(|s|s.to_owned()),
             total: total,
             current: AtomicUsize::new(0)
         }
@@ -34,6 +35,7 @@ impl Bar {
 
     fn write(&self, current: u64) {
         let width = self.width();
+        let prefix_display = self.prefix.clone().unwrap_or("".to_owned());
         let mut bar_display = String::new();
         let counter_display = format!(
             "{} / {} ", current, self.total
@@ -43,7 +45,7 @@ impl Bar {
             " {:.2} %", percent
         );
         let bar_width = format!(
-            "{}{}[]",counter_display, percent_display
+            "{}{}{}[]", prefix_display, counter_display, percent_display
         ).chars().collect::<Vec<char>>().len() as u64;
         let size = width - bar_width;
         let cur_count = (
@@ -63,7 +65,7 @@ impl Bar {
             ).unwrap()
         );
         bar_display.push_str("]");
-        print!("\r{}{}{}", counter_display, bar_display, percent_display)
+        print!("\r{}{}{}{}", prefix_display, counter_display, bar_display, percent_display)
     }
 }
 
