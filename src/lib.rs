@@ -1,29 +1,38 @@
 extern crate termsize;
 
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::thread;
-use std::sync::mpsc::{channel, Sender, Receiver};
 
 pub struct Bar {
     total: u64,
-    current: u64,
-    sender: Sender<u64>
+    current: AtomicUsize
 }
 
 impl Bar {
     pub fn new(total: u64) -> Bar {
-        let (tx, rx) = channel();
         Bar {
             total: total,
-            current: 0,
-            sender: tx
+            current: AtomicUsize::new(0)
         }
+    }
+
+    pub fn incr(&self) -> usize {
+        self.add(1)
+    }
+
+    pub fn add(&self, delta: usize) -> usize {
+        self.current.fetch_add(delta, Ordering::Relaxed)
     }
 
     pub fn width(&self) -> u64 {
        termsize::get().unwrap().cols as u64
     }
 
-    pub fn write(&self, current: u64) {
+    pub fn update(&self) {
+        self.write(self.current.load(Ordering::Relaxed) as u64)
+    }
+
+    fn write(&self, current: u64) {
         let width = self.width();
         let mut bar_display = String::new();
         let counter_display = format!(
