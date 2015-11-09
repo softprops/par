@@ -1,0 +1,7 @@
+[package]
+name = "par"
+version = "0.1.0"
+authors = ["softprops <d.tangren@gmail.com>"]
+
+[dependencies.termsize]
+path = "../termsize"
