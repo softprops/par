@@ -9,8 +9,11 @@ use std::default::Default;
 
 static FORMAT: &'static str = "[=>_]";
 
+/// Unit of display for progress counter
 pub enum Units {
+    /// No units
     None,
+    /// formats units in humanized byte sizes
     Bytes
 }
 
@@ -20,8 +23,9 @@ impl Default for Units {
     }
 }
 
+/// A bar of progress information
 pub struct Bar {
-    prefix: String,
+    pub prefix: String,
     total: usize,
     current: AtomicUsize,
     units: Units,
@@ -36,6 +40,7 @@ pub struct Bar {
 }
 
 impl Bar {
+    /// creates a new bar with a target total size of `total`
     pub fn new(total: usize) -> Bar {
         let mut bar = Bar {
             prefix: String::new(),
@@ -55,7 +60,8 @@ impl Bar {
         bar
     }
 
-    /// bar.format("[=>_]")
+    /// sets a custom format for display
+    /// Example: bar.format("[=>_]")
     pub fn format(&mut self, spec: &str) {
         if spec.len() == 5 {
             let parts = spec.split("").collect::<Vec<&str>>();
@@ -65,11 +71,6 @@ impl Bar {
             self.bar_empty = parts[4].to_owned();
             self.bar_end = parts[5].to_owned();
         }
-    }
-
-    /// set prefix string
-    pub fn prefix(&mut self, pre: &str) {
-        self.prefix = pre.to_owned();
     }
 
     /// increment bar count by one
