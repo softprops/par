@@ -1,42 +1,24 @@
-extern crate termsize;
+extern crate capsize;
 
+use std::iter;
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::io::Read;
 
-pub struct ProgressReader<'a, R> {
-    inner: R,
-    bar: &'a Bar<'a>,
-}
-
-impl<'a, R: Read> ProgressReader<'a, R> {
-    pub fn new(r: R, bar: &'a Bar<'a>) -> ProgressReader<'a, R> {
-        ProgressReader { inner: r, bar: bar }
-    }
-}
-
-impl<'a, R: Read> Read for ProgressReader<'a, R> {
-    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
-        let amt = try!(self.inner.read(buf));
-        self.bar.add(amt);
-        self.bar.update();
-        return Ok(amt)
-    }
-}
+static FORMAT: &'static str = "[=>_]";
 
 pub struct Bar<'a> {
-    prefix: Option<&'a str>,
-    total: u64,
+    prefix: &'a str,
+    total: usize,
     current: AtomicUsize,
     format: &'a str
 }
 
 impl<'a> Bar<'a> {
-    pub fn new(total: u64, prefix: Option<&'a str>) -> Bar<'a> {
+    pub fn new(total: usize, prefix: Option<&'a str>) -> Bar<'a> {
         Bar {
-            prefix: prefix,
+            prefix: prefix.unwrap_or(""),
             total: total,
             current: AtomicUsize::new(0),
-            format: "[=>_]"
+            format: FORMAT
         }
     }
 
@@ -48,51 +30,57 @@ impl<'a> Bar<'a> {
         self.current.fetch_add(delta, Ordering::Relaxed)
     }
 
-    pub fn width(&self) -> u64 {
-       termsize::get().unwrap().cols as u64
+    pub fn width(&self) -> usize {
+        80
     }
 
     pub fn update(&self) {
         let current = self.current.load(Ordering::Relaxed);
-        self.write(current as u64)
+        self.write(current)
     }
 
-    fn write(&self, current: u64) {
+    pub fn finish_print(&self, msg: &str) {
+        println!("{}",msg)
+    }
+
+    fn repeat(what: &str, n: usize) -> String {
+        iter::repeat(what).take(n).collect::<String>()
+    }
+
+    fn write(&self, current: usize) {
         let width = self.width();
-        let prefix_display = self.prefix.clone().unwrap_or("");
+        let prefix_display = self.prefix;
+
         let formats = self.format.split("").collect::<Vec<&str>>();
         let bar_start = formats[1];
         let current_marker = formats[2];
         let current_n = formats[3];
         let empty = formats[4];
         let bar_end = formats[5];
+
         let mut bar_display = String::new();
         let counter_display = format!(
             "{} / {} ", current, self.total
         );
-        let percent = current as f64 / (self.total as f64 / 100 as f64);
+        let percent = current as f64 / (self.total as f64 / 100_f64);
         let percent_display = format!(
-            " {:.2} %", percent
+            " {:.*} %", 2, percent
         );
         let bar_width = format!(
             "{}{}{}{}{}", prefix_display, counter_display, percent_display, bar_start, bar_end
-        ).chars().collect::<Vec<char>>().len() as u64;
+        ).chars().collect::<Vec<char>>().len();
         let size = width - bar_width;
         let cur_count = (
             (current as f64 / self.total as f64) * size as f64
-        ).ceil() as u64;
+        ).ceil() as usize;
         let empt_count = size - cur_count;
         bar_display.push_str(bar_start);
         bar_display.push_str(
-            &String::from_utf8(
-                vec![b'='; (cur_count - 1) as usize]
-            ).unwrap()
+            &Bar::repeat(current_marker, (cur_count - 1) as usize)
         );
         bar_display.push_str(current_n);
         bar_display.push_str(
-            &String::from_utf8(
-                vec![b'-'; (empt_count) as usize]
-            ).unwrap()
+            &Bar::repeat(empty, (empt_count) as usize)
         );
         bar_display.push_str(bar_end);
         print!("\r{}{}{}{}", prefix_display, counter_display, bar_display, percent_display)
