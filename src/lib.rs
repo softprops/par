@@ -5,12 +5,19 @@ use capsize::Capacity;
 use std::io::Write;
 use std::iter;
 use std::sync::atomic::{AtomicUsize, Ordering};
+use std::default::Default;
 
 static FORMAT: &'static str = "[=>_]";
 
 pub enum Units {
     None,
     Bytes
+}
+
+impl Default for Units {
+    fn default() -> Units {
+        Units::None
+    }
 }
 
 pub struct Bar {
@@ -34,7 +41,7 @@ impl Bar {
             prefix: String::new(),
             total: total,
             current: AtomicUsize::new(0),
-            units: Units::Bytes,
+            units: Default::default(),
             bar_start: String::new(),
             bar_current: String::new(),
             bar_current_n: String::new(),
@@ -60,6 +67,7 @@ impl Bar {
         }
     }
 
+    /// set prefix string
     pub fn prefix(&mut self, pre: &str) {
         self.prefix = pre.to_owned();
     }
@@ -74,8 +82,9 @@ impl Bar {
         self.current.fetch_add(delta, Ordering::Relaxed)
     }
 
-    pub fn width(&self) -> usize {
-        termsize::get().map(|s|s.cols as usize).unwrap_or(80)
+    /// sets the bar count to specified value
+    pub fn set(&self, value: usize) {
+        self.current.store(value, Ordering::Relaxed)
     }
 
     pub fn update(&self) {
@@ -86,6 +95,10 @@ impl Bar {
     pub fn finish_print(&self, msg: &str) {
         println!("");
         println!("{}", msg)
+    }
+
+    fn width(&self) -> usize {
+        termsize::get().map(|s|s.cols as usize).unwrap_or(80)
     }
 
     fn write(&self, current: usize) {
