@@ -1,6 +1,8 @@
 extern crate capsize;
+extern crate termsize;
 
 use capsize::Capacity;
+use std::io::Write;
 use std::iter;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
@@ -21,9 +23,9 @@ pub struct Bar {
     bar_current_n: String,
     bar_empty: String,
     bar_end: String,
-    show_percent: bool,
-    show_counter: bool,
-    show_bar: bool
+    pub show_percent: bool,
+    pub show_counter: bool,
+    pub show_bar: bool
 }
 
 impl Bar {
@@ -73,7 +75,7 @@ impl Bar {
     }
 
     pub fn width(&self) -> usize {
-        80
+        termsize::get().map(|s|s.cols as usize).unwrap_or(80)
     }
 
     pub fn update(&self) {
@@ -82,7 +84,8 @@ impl Bar {
     }
 
     pub fn finish_print(&self, msg: &str) {
-        println!("{}",msg)
+        println!("");
+        println!("{}", msg)
     }
 
     fn write(&self, current: usize) {
@@ -140,7 +143,7 @@ impl Bar {
             display = display + &repeat(" ", remaining);
         }
 
-        print!("\r{}", display)
+        let _ = write!(&mut std::io::stderr(), "\r{}", display);
     }
 }
 
