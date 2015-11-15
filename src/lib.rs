@@ -5,27 +5,57 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 static FORMAT: &'static str = "[=>_]";
 
-pub struct Bar<'a> {
-    prefix: &'a str,
+pub struct Bar {
+    prefix: String,
     total: usize,
     current: AtomicUsize,
-    format: &'a str
+    bar_start: String,
+    bar_current: String,
+    bar_current_n: String,
+    bar_empty: String,
+    bar_end: String,
+    show_percent: bool,
+    show_counter: bool,
+    show_bar: bool
 }
 
-impl<'a> Bar<'a> {
-    pub fn new(total: usize, prefix: Option<&'a str>) -> Bar<'a> {
-        Bar {
-            prefix: prefix.unwrap_or(""),
+impl Bar {
+    pub fn new(total: usize) -> Bar {
+        let mut bar = Bar {
+            prefix: String::new(),
             total: total,
             current: AtomicUsize::new(0),
-            format: FORMAT
+            bar_start: String::new(),
+            bar_current: String::new(),
+            bar_current_n: String::new(),
+            bar_empty: String::new(),
+            bar_end: String::new(),
+            show_percent: true,
+            show_counter: true,
+            show_bar: true
+        };
+        bar.format(FORMAT);
+        bar
+    }
+
+    /// bar.format("[=>_]")
+    pub fn format(&mut self, spec: &str) {
+        if spec.len() == 5 {
+            let parts = spec.split("").collect::<Vec<&str>>();
+            self.bar_start = parts[1].to_owned();
+            self.bar_current = parts[2].to_owned();
+            self.bar_current_n = parts[3].to_owned();
+            self.bar_empty = parts[4].to_owned();
+            self.bar_end = parts[5].to_owned();
         }
     }
 
+    /// increment bar count by one
     pub fn incr(&self) -> usize {
         self.add(1)
     }
 
+    /// add 1 to the bar count
     pub fn add(&self, delta: usize) -> usize {
         self.current.fetch_add(delta, Ordering::Relaxed)
     }
@@ -43,47 +73,55 @@ impl<'a> Bar<'a> {
         println!("{}",msg)
     }
 
-    fn repeat(what: &str, n: usize) -> String {
-        iter::repeat(what).take(n).collect::<String>()
-    }
-
     fn write(&self, current: usize) {
+        fn repeat(what: &str, n: usize) -> String {
+            iter::repeat(what).take(n).collect::<String>()
+        }
+
         let width = self.width();
-        let prefix_display = self.prefix;
 
-        let formats = self.format.split("").collect::<Vec<&str>>();
-        let bar_start = formats[1];
-        let current_marker = formats[2];
-        let current_n = formats[3];
-        let empty = formats[4];
-        let bar_end = formats[5];
+        let mut prefix = String::new();
+        let mut mid = String::new();
+        let mut suffix = String::new();
 
-        let mut bar_display = String::new();
-        let counter_display = format!(
-            "{} / {} ", current, self.total
-        );
-        let percent = current as f64 / (self.total as f64 / 100_f64);
-        let percent_display = format!(
-            " {:.*} %", 2, percent
-        );
-        let bar_width = format!(
-            "{}{}{}{}{}", prefix_display, counter_display, percent_display, bar_start, bar_end
-        ).chars().collect::<Vec<char>>().len();
-        let size = width - bar_width;
-        let cur_count = (
-            (current as f64 / self.total as f64) * size as f64
-        ).ceil() as usize;
-        let empt_count = size - cur_count;
-        bar_display.push_str(bar_start);
-        bar_display.push_str(
-            &Bar::repeat(current_marker, (cur_count - 1) as usize)
-        );
-        bar_display.push_str(current_n);
-        bar_display.push_str(
-            &Bar::repeat(empty, (empt_count) as usize)
-        );
-        bar_display.push_str(bar_end);
-        print!("\r{}{}{}{}", prefix_display, counter_display, bar_display, percent_display)
+        // counter
+        if self.show_counter {
+            prefix = format!(
+                "{} / {} ", current, self.total
+            );
+        }
+
+        // percent complete
+        if self.show_percent {
+            let percent = current as f64 / (self.total as f64 / 100_f64);
+            suffix = suffix + &format!(
+                " {:.*} %", 2, percent
+            );
+        }
+
+        if self.show_bar {
+            let size = width - (prefix.len() + suffix.len() + 3);
+            if size > 0 {
+                let cur_count = (
+                    (current as f64 / self.total as f64) * size as f64
+                ).ceil() as usize;
+                let empt_count = size - cur_count;
+                mid = self.bar_start.clone();
+                if empt_count > 0 {
+                    mid = mid + &repeat(self.bar_current.as_ref(), (cur_count - 1) as usize) +  &self.bar_current_n;
+                } else {
+                    mid = mid + &repeat(self.bar_current.as_ref(), cur_count as usize);
+                }
+                mid = mid + &repeat(self.bar_empty.as_ref(), (empt_count) as usize) + &self.bar_end
+            }
+        }
+        let mut display = prefix + &mid + &suffix;
+        if display.len() < width {
+            let remaining = width - display.len();
+            display = display + &repeat(" ", remaining);
+        }
+
+        print!("\r{}", display)
     }
 }
 
