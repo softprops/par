@@ -3,8 +3,8 @@ extern crate par;
 fn main() {
     let mut bar = par::Bar::new(
         100
-    );
-    bar.prefix("dl ");
+   );
+    bar.prefix = String::from("dl ");
     for _ in 1..101 {
         bar.incr();
         bar.update();
