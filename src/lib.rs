@@ -4,7 +4,6 @@ use capsize::Capacity;
 use std::iter;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-
 static FORMAT: &'static str = "[=>_]";
 
 pub enum Units {
@@ -59,6 +58,10 @@ impl Bar {
         }
     }
 
+    pub fn prefix(&mut self, pre: &str) {
+        self.prefix = pre.to_owned();
+    }
+
     /// increment bar count by one
     pub fn incr(&self) -> usize {
         self.add(1)
@@ -96,13 +99,13 @@ impl Bar {
 
         let width = self.width();
 
-        let mut prefix = String::new();
+        let mut prefix = self.prefix.clone();
         let mut mid = String::new();
         let mut suffix = String::new();
 
         // counter
         if self.show_counter {
-            prefix = format!(
+            prefix = prefix + &format!(
                 "{} / {} ", unit(current, &self.units), unit(self.total, &self.units)
             );
         }

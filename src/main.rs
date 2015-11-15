@@ -1,10 +1,11 @@
 extern crate par;
 
 fn main() {
-    let bar = par::Bar::new(
-        1024*4
+    let mut bar = par::Bar::new(
+        100
     );
-    for _ in 1..(1024 * 4) {
+    bar.prefix("dl ");
+    for _ in 1..101 {
         bar.incr();
         bar.update();
         std::thread::sleep_ms(10);
