@@ -2,9 +2,11 @@
 name = "par"
 version = "0.1.0"
 authors = ["softprops <d.tangren@gmail.com>"]
-
-[dependencies.termsize]
-path = "../termsize"
+description = "A flexible progress bar"
+repository = "https://github.com/softprops/par"
+keywords = ["unix", "terminal", "progress", "progressbar", "io"]
+license = "MIT"
 
 [dependencies]
-hyper = "*"
+capsize = "0.1"
+termsize = "0.1"

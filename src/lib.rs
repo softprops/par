@@ -1,14 +1,22 @@
 extern crate capsize;
 
+use capsize::Capacity;
 use std::iter;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
+
 static FORMAT: &'static str = "[=>_]";
+
+pub enum Units {
+    None,
+    Bytes
+}
 
 pub struct Bar {
     prefix: String,
     total: usize,
     current: AtomicUsize,
+    units: Units,
     bar_start: String,
     bar_current: String,
     bar_current_n: String,
@@ -25,6 +33,7 @@ impl Bar {
             prefix: String::new(),
             total: total,
             current: AtomicUsize::new(0),
+            units: Units::Bytes,
             bar_start: String::new(),
             bar_current: String::new(),
             bar_current_n: String::new(),
@@ -78,6 +87,13 @@ impl Bar {
             iter::repeat(what).take(n).collect::<String>()
         }
 
+        fn unit(value: usize, units: &Units) -> String {
+            match *units {
+                Units::None => value.to_string(),
+                Units::Bytes => (value as i64).capacity()
+            }
+        }
+
         let width = self.width();
 
         let mut prefix = String::new();
@@ -87,7 +103,7 @@ impl Bar {
         // counter
         if self.show_counter {
             prefix = format!(
-                "{} / {} ", current, self.total
+                "{} / {} ", unit(current, &self.units), unit(self.total, &self.units)
             );
         }
 
