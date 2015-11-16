@@ -23,6 +23,19 @@ impl Default for Units {
     }
 }
 
+/// Preference for reporting progress
+pub enum Reporter {
+    StdOut,
+    StdErr,
+    Callback(fn(String) -> ())
+}
+
+impl Default for Reporter {
+    fn default() -> Reporter {
+        Reporter::StdErr
+    }
+}
+
 /// IO progress. Implementations for Read and Write are provided
 pub struct IO<T> {
     inner: T,
@@ -78,6 +91,8 @@ pub struct Bar {
     pub show_bar: bool,
     /// an arbitrary string label to prefix display with
     pub prefix: String,
+    /// preference for reporting progress
+    pub reporter: Reporter,
     current: AtomicUsize,
     units: Units,
     bar_start: String,
@@ -203,7 +218,17 @@ impl Bar {
             display = display + &repeat(" ", remaining);
         }
 
-        let _ = write!(&mut std::io::stderr(), "\r{}", display);
+        match self.reporter {
+            Reporter::StdErr => {
+                let _ = write!(&mut std::io::stderr(), "\r{}", display);
+            },
+            Reporter::StdOut => {
+                let _ = write!(&mut std::io::stderr(), "\r{}", display);
+            },
+            Reporter::Callback(cb) => {
+                cb(display);
+            }
+        }
     }
 }
 
