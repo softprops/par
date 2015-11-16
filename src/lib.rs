@@ -24,37 +24,35 @@ impl Default for Units {
 }
 
 /// A bar of progress information
+#[derive(Default)]
 pub struct Bar {
-    pub prefix: String,
     total: usize,
+    /// show progress percent, defaults to true
+    pub show_percent: bool,
+    /// show progress counter. Defaults to true
+    pub show_counter: bool,
+    /// show main progress bar UI. Defaults to true
+    pub show_bar: bool,
+    /// an arbitrary string label to prefix display with
+    pub prefix: String,
     current: AtomicUsize,
     units: Units,
     bar_start: String,
     bar_current: String,
     bar_current_n: String,
     bar_empty: String,
-    bar_end: String,
-    pub show_percent: bool,
-    pub show_counter: bool,
-    pub show_bar: bool
+    bar_end: String
 }
 
 impl Bar {
     /// creates a new bar with a target total size of `total`
     pub fn new(total: usize) -> Bar {
         let mut bar = Bar {
-            prefix: String::new(),
             total: total,
-            current: AtomicUsize::new(0),
-            units: Default::default(),
-            bar_start: String::new(),
-            bar_current: String::new(),
-            bar_current_n: String::new(),
-            bar_empty: String::new(),
-            bar_end: String::new(),
             show_percent: true,
             show_counter: true,
-            show_bar: true
+            show_bar: true,
+            ..Default::default()
         };
         bar.format(FORMAT);
         bar
