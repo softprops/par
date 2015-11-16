@@ -7,7 +7,6 @@ fn main() {
     bar.prefix = String::from("dl ");
     for _ in 1..101 {
         bar.incr();
-        bar.update();
         std::thread::sleep_ms(10);
     }
     bar.finish_print("done");

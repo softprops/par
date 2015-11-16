@@ -78,17 +78,22 @@ impl Bar {
 
     /// add 1 to the bar count
     pub fn add(&self, delta: usize) -> usize {
-        self.current.fetch_add(delta, Ordering::Relaxed)
+        let prev = self.current.fetch_add(delta, Ordering::Relaxed);
+        self.update();
+        prev
     }
 
     /// sets the bar count to specified value
     pub fn set(&self, value: usize) {
-        self.current.store(value, Ordering::Relaxed)
+        self.current.store(value, Ordering::Relaxed);
+        self.update()
     }
 
     pub fn update(&self) {
         let current = self.current.load(Ordering::Relaxed);
-        self.write(current)
+        if current <= self.total {
+            self.write(current)
+        }
     }
 
     pub fn finish_print(&self, msg: &str) {
