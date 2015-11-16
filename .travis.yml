@@ -30,3 +30,6 @@ after_success: |-
   pip install --user ghp-import &&
   /home/travis/.local/bin/ghp-import -n target/doc &&
   git push -fq https://${GH_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git gh-pages
+env:
+  global:
+  - secure: U5Yvg+9e0m8h75PV/nq5CCteoWT0LTDIr/mRbZ0agS0WCnXRvVtt3KulPe3qEYHIzdNVTnZbjiBPhJCvaJ9N+HrPhDfA42HI9W7qaYzrpCOTZm+udGUOWuMzL9Wo/GxO8cds3DzipaZOsCNEfEVuloA5wuCmAsZBfkzPN3n/czGYTi9ZiPVImaLxYqfEGeQ0LlZCgnfahK378xeICLzVEey2hVGxIeTspZAXVCAzNglL4BP0y1hKD3lDlVoRUn/P3NXuXBfDZ8ZMpoTWeaFZPmLc0axOUWczP8rUGXtaGaFDIOe3icfeoY7wEe8Q5UuLrs9IXRMCFuuVwR1jFyMOEomgqqbcJAGh/2HFBwreJwapSrgUaGi31COcRSLG9IRSP3QtCXZUiZ8VmFR/67/nr2nY6cg5tsHL6bGykglvx3Nwa4WRO5gb2PUrdqP0dEjPO9Dx0N8QmqgOY35O3+XtfVYrMDnyd3Ev0Lm8IRoMHp/BvsiSx+NsLBEZJB5gWmZHZJaIPlJ8cwFKVJnBcL3y2rMzLl67tk+R5zi8OUoTgocPfw305SnniyEwrZ2uVdGfto2nI6x0Xfe3Ai+lBqxr8CoFP0qnK+cOd9wdTZfHVpVsE98u43pxf9Toy4ktVRgnH1U5aWNLgVAYTz4/HHZoW+Zydp2Z6I8wyGGN9esI+2c=
