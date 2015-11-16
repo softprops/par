@@ -25,8 +25,11 @@ impl Default for Units {
 
 /// Preference for reporting progress
 pub enum Reporter {
+    /// Report progress to stdout
     StdOut,
+    /// Report progress to stderr
     StdErr,
+    /// Report progress to a callback
     Callback(fn(String) -> ())
 }
 
