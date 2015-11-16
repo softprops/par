@@ -2,7 +2,7 @@ extern crate capsize;
 extern crate termsize;
 
 use capsize::Capacity;
-use std::io::Write;
+use std::io::{self, Read, Write};
 use std::iter;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::default::Default;
@@ -20,6 +20,49 @@ pub enum Units {
 impl Default for Units {
     fn default() -> Units {
         Units::None
+    }
+}
+
+/// IO progress. Implementations for Read and Write are provided
+pub struct IO<T> {
+    inner: T,
+    bar: Bar
+}
+
+impl <R: Read> IO<R> {
+    pub fn new(read: R, bar: Bar) -> IO<R> {
+        IO {
+            inner: read,
+            bar: bar
+        }
+    }
+}
+
+impl <R: Read> Read for IO<R> {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        let n = try!(self.inner.read(buf));
+        self.bar.add(n);
+        Ok(n)
+    }
+}
+
+impl <W: Write> IO<W> {
+    pub fn new(write: W, bar: Bar) -> IO<W> {
+        IO {
+            inner: write,
+            bar: bar
+        }
+    }
+}
+
+impl <W: Write> Write for IO<W> {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        let n = buf.len();
+        self.bar.add(n);
+        Ok(n)
+    }
+    fn flush(&mut self) -> io::Result<()> {
+        Ok(())
     }
 }
 
