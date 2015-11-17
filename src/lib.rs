@@ -27,7 +27,7 @@ static FORMAT: &'static str = "[=>_]";
 pub enum Units {
     /// No units
     None,
-    /// formats units in humanized byte sizes
+    /// format progress in humanized byte sizes
     Bytes
 }
 
