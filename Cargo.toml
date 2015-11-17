@@ -10,3 +10,6 @@ license = "MIT"
 [dependencies]
 capsize = "0.1"
 termsize = "0.1"
+
+[dev_dependencies]
+hyper = "0.6"
