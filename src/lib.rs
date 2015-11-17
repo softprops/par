@@ -53,22 +53,28 @@ impl Default for Reporter {
     }
 }
 
-/// IO progress. Implementations for Read and Write are provided
-pub struct IO<T> {
+/// write progress. Implementations for Read and Write are provided
+pub struct Writer<T> {
     inner: T,
     bar: Bar
 }
 
-impl <R: Read> IO<R> {
-    pub fn new(read: R, bar: Bar) -> IO<R> {
-        IO {
+/// read progress. Implementations for Read and Write are provided
+pub struct Reader<T> {
+    inner: T,
+    bar: Bar
+}
+
+impl <R: Read> Reader<R> {
+    pub fn new(read: R, bar: Bar) -> Reader<R> {
+        Reader {
             inner: read,
             bar: bar
         }
     }
 }
 
-impl <R: Read> Read for IO<R> {
+impl <R: Read> Read for Reader<R> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         let n = try!(self.inner.read(buf));
         self.bar.add(n);
@@ -76,16 +82,16 @@ impl <R: Read> Read for IO<R> {
     }
 }
 
-impl <W: Write> IO<W> {
-    pub fn new(write: W, bar: Bar) -> IO<W> {
-        IO {
+impl <W: Write> Writer<W> {
+    pub fn new(write: W, bar: Bar) -> Writer<W> {
+        Writer {
             inner: write,
             bar: bar
         }
     }
 }
 
-impl <W: Write> Write for IO<W> {
+impl <W: Write> Write for Writer<W> {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         let n = buf.len();
         self.bar.add(n);
@@ -111,7 +117,7 @@ pub struct Bar {
     /// preference for reporting progress
     pub reporter: Reporter,
     current: AtomicUsize,
-    units: Units,
+    pub units: Units,
     bar_start: String,
     bar_current: String,
     bar_current_n: String,
