@@ -1,3 +1,17 @@
+//! par is a terminal interface for rendering progress bars
+//!
+//! #example
+//! ```rust
+//! use par::Bar;
+//! fn main() {
+//!     let bar = Bar::new(100);
+//!     for i in 1..101 {
+//!         bar.add(i);
+//!         std::thread::sleep_ms(10);
+//!     }
+//!     bar.finish_print("done")
+//! }
+//! ```
 extern crate capsize;
 extern crate termsize;
 
