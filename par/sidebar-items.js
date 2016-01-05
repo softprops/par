@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Reporter","Preference for reporting progress"],["Units","Unit of display for progress counter"]],"struct":[["Bar","A bar of progress information"],["Reader","read progress. Implementations for Read and Write are provided"],["Writer","write progress. Implementations for Read and Write are provided"]]});

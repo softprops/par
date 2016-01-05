@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["get","Gets the current terminal size"]],"struct":[["Size","Size"]]});
