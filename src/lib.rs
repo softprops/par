@@ -205,17 +205,25 @@ impl Bar {
     }
 
     #[inline]
-    fn to_str(&self) -> String {
-        fn repeat(what: &str, n: usize) -> String {
-            iter::repeat(what).take(n).collect::<String>()
-        }
-
+    fn counter_str(&self) -> String {
         fn unit(value: usize, units: &Units) -> String {
             match *units {
                 Units::None => value.to_string(),
                 Units::Bytes => (value as i64).capacity()
             }
         }
+        let current = self.current.load(Ordering::Relaxed);
+        format!(
+            "{} / {} ", unit(current, &self.units), unit(self.total, &self.units)
+        )
+    }
+
+    #[inline]
+    fn to_str(&self) -> String {
+        fn repeat(what: &str, n: usize) -> String {
+            iter::repeat(what).take(n).collect::<String>()
+        }
+
         let current = self.current.load(Ordering::Relaxed);
         let width = self.width();
 
@@ -225,9 +233,7 @@ impl Bar {
 
         // counter
         if self.show_counter {
-            prefix = prefix + &format!(
-                "{} / {} ", unit(current, &self.units), unit(self.total, &self.units)
-            );
+            prefix = prefix + &self.counter_str();
         }
 
         // percent complete
