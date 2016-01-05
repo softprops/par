@@ -178,7 +178,7 @@ impl Bar {
     pub fn update(&self) {
         let current = self.current.load(Ordering::Relaxed);
         if current <= self.total {
-            self.render();
+            self.progress();
         }
     }
 
@@ -259,7 +259,7 @@ impl Bar {
         display
     }
 
-    fn render(&self) {
+    fn progress(&self) {
         let display = self.to_str();
         match self.reporter {
             Reporter::StdErr => {
