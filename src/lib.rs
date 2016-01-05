@@ -44,7 +44,9 @@ pub enum Reporter {
     /// Report progress to stderr
     StdErr,
     /// Report progress to a callback
-    Callback(fn(String) -> ())
+    Callback(fn(String) -> ()),
+    /// Skip reporting
+    None
 }
 
 impl Default for Reporter {
@@ -173,7 +175,7 @@ impl Bar {
     pub fn update(&self) {
         let current = self.current.load(Ordering::Relaxed);
         if current <= self.total {
-            self.write(current)
+            self.render();
         }
     }
 
@@ -186,7 +188,21 @@ impl Bar {
         termsize::get().map(|s|s.cols as usize).unwrap_or(80)
     }
 
-    fn write(&self, current: usize) {
+
+    #[inline]
+    pub fn percent_completed(&self) -> f64 {
+        self.current.load(Ordering::Relaxed) as f64 / (self.total as f64 / 100_f64)
+    }
+
+    #[inline]
+    fn percent_completed_str(&self) -> String {
+        format!(
+            " {:.*} %", 2, self.percent_completed()
+        )
+    }
+
+    #[inline]
+    fn to_str(&self) -> String {
         fn repeat(what: &str, n: usize) -> String {
             iter::repeat(what).take(n).collect::<String>()
         }
@@ -197,7 +213,7 @@ impl Bar {
                 Units::Bytes => (value as i64).capacity()
             }
         }
-
+        let current = self.current.load(Ordering::Relaxed);
         let width = self.width();
 
         let mut prefix = self.prefix.clone();
@@ -213,10 +229,7 @@ impl Bar {
 
         // percent complete
         if self.show_percent {
-            let percent = current as f64 / (self.total as f64 / 100_f64);
-            suffix = suffix + &format!(
-                " {:.*} %", 2, percent
-            );
+            suffix = suffix + &self.percent_completed_str();
         }
 
         if self.show_bar {
@@ -240,7 +253,11 @@ impl Bar {
             let remaining = width - display.len();
             display = display + &repeat(" ", remaining);
         }
+        display
+    }
 
+    fn render(&self) {
+        let display = self.to_str();
         match self.reporter {
             Reporter::StdErr => {
                 let _ = write!(&mut std::io::stderr(), "\r{}", display);
@@ -250,11 +267,20 @@ impl Bar {
             },
             Reporter::Callback(cb) => {
                 cb(display);
-            }
+            },
+            Reporter::None => ()
         }
     }
 }
 
-#[test]
-fn it_works() {
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn it_works() {
+        let mut bar = Bar::new(100);
+        bar.reporter = Reporter::None;
+        bar.add(1);
+        assert_eq!(bar.percent_completed(), 1_f64);
+    }
 }
