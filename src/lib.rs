@@ -16,6 +16,7 @@ extern crate capsize;
 extern crate termsize;
 
 use capsize::Capacity;
+use std::fmt;
 use std::io::{self, Read, Write};
 use std::iter;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -24,6 +25,7 @@ use std::default::Default;
 static FORMAT: &'static str = "[=>_]";
 
 /// Unit of display for progress counter
+#[derive(Debug)]
 pub enum Units {
     /// No units
     None,
@@ -38,6 +40,7 @@ impl Default for Units {
 }
 
 /// Preference for reporting progress
+#[derive(Debug)]
 pub enum Reporter {
     /// Report progress to stdout
     StdOut,
@@ -105,7 +108,7 @@ impl <W: Write> Write for Writer<W> {
 }
 
 /// A bar of progress information
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct Bar {
     total: usize,
     /// show progress percent, defaults to true
@@ -270,6 +273,12 @@ impl Bar {
             },
             Reporter::None => ()
         }
+    }
+}
+
+impl fmt::Display for Bar {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.to_str())
     }
 }
 
